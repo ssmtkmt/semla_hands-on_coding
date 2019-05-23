@@ -10,6 +10,8 @@ import matplotlib
 import os
 from skimage.measure import compare_ssim as ssim
 import argparse
+from random import uniform
+import copy
 
 def rotate(img, rad_angle):
     afine_tf = transform.AffineTransform(rotation=rad_angle)
@@ -104,35 +106,48 @@ def apply_random_transformation(image_origin, tr_metadata):
     :return ssim_value: the ssim value comparing between the original image and the transformed one w.r.t pixel-value transformations
     '''
     transformed_data = []
+    transformed_image = image_origin.copy()
     # apply mutation using the metadata parameters 
-    
+    transformed_image = apply_mutation(transformed_image, tr_metadata.delta, tr_metadata.mutation_prob)
     # change contrast using random factor within the valid interval
-
+    contrast_factor = uniform(tr_metadata.contrast_min_bound, tr_metadata.contrast_max_bound)
+    transformed_image = change_contrast(transformed_image, contrast_factor)
     # change brightness using random factor within the valid interval
-
+    brightness_factor = uniform(tr_metadata.brightness_min_bound, tr_metadata.brightness_max_bound)
+    transformed_image = change_brightness(transformed_image, brightness_factor)
     # change sharpness using random factor within the valid interval
-
+    sharpness_factor = uniform(tr_metadata.sharpness_min_bound, tr_metadata.sharpness_max_bound)
+    transformed_image = change_sharpness(transformed_image, sharpness_factor)
     # add blur effect using random sigma within the valid interval
-
+    sigma = uniform(tr_metadata.sigma_min_bound, tr_metadata.sigma_max_bound)
+    transformed_image = blur(transformed_image, sigma)
     # compute the ssim between the original image and the resulting pixel-value transformed image
-
+    ssim_value = ssim(image_origin, transformed_image)
     # add the transformed image to the transformed data
-
+    transformed_data.append(transformed_image)
     # translate the image using random translation parameters within the valid interval
-
+    trans_x = uniform(-tr_metadata.trans_abs_bound, tr_metadata.trans_abs_bound)
+    trans_y = uniform(-tr_metadata.trans_abs_bound, tr_metadata.trans_abs_bound)
+    translated_image = translate(image_origin.copy(), trans_x, trans_y)
     # add the translated image to the transformed data
-
+    transformed_data.append(translated_image)
     # scale the image using random scale parameters within the valid interval
-
+    scale1 = uniform(tr_metadata.scale_min_bound, tr_metadata.scale_max_bound)
+    scale2 = uniform(tr_metadata.scale_min_bound, tr_metadata.scale_max_bound)
+    scaled_image = scale(image_origin.copy(), scale1, scale2)
     # add the scaled image to the transformed data
-
+    transformed_data.append(scaled_image)
     # rotate the image using random angle  within the valid interval
-
+    rad_angle = uniform(-tr_metadata.rot_angle_abs_bound, tr_metadata.rot_angle_abs_bound)
+    rotated_image = rotate(image_origin.copy(), rad_angle)
     # add the rotated image to the transformed data
-
+    transformed_data.append(rotated_image)
     # shear the image using random value within the valid interval
-
+    shear_value = uniform(-tr_metadata.shear_abs_bound, tr_metadata.shear_abs_bound)
+    sheared_image = shear(image_origin.copy(), shear_value)
     # add the sheared image to the transformed data
+    transformed_data.append(sheared_image)
+    return transformed_data, ssim_value
 
 def normalize(img):
     norm_img = np.float32(img / 255.0)
