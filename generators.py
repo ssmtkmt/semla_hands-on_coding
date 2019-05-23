@@ -24,6 +24,9 @@ class Generator(object):
         :param data: a set of inputs
         :param logits: a set of logits (scores w.r.t labels for each input)
         '''
+        for img, logit in zip(data, logits):
+            if self.target_class != logit:
+                self.store_data(img)
         pass
 
     def store_data(self, data, predict_class):
