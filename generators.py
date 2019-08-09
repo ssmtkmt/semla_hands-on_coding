@@ -25,9 +25,9 @@ class Generator(object):
         :param logits: a set of logits (scores w.r.t labels for each input)
         '''
         for img, logit in zip(data, logits):
-            if self.target_class != logit:
-                self.store_data(img)
-        pass
+            predict_class = logit.argmax()
+            if self.target_class != predict_class:
+                self.store_data(img, predict_class)
 
     def store_data(self, data, predict_class):
         self.adv_found += 1
